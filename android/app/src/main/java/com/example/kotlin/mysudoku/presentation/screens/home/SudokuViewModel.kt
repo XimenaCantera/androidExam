@@ -11,22 +11,55 @@ import javax.inject.Inject
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class SudokuViewModel @Inject constructor(  // ← Esta línea debe tener @Inject
+class SudokuViewModel @Inject constructor(
     private val generateSudoku: GenerateSudokuUseCase
 ) : ViewModel() {
 
     var uiState by mutableStateOf(SudokuUiState())
         private set
 
+    // Función para cargar un nuevo puzzle
     fun loadPuzzle(width: Int, height: Int, difficulty: String) {
         viewModelScope.launch {
-            uiState = uiState.copy(isLoading = true)
+            uiState = uiState.copy(isLoading = true, error = null, isCorrect = null)
             try {
                 val puzzle = generateSudoku(width, height, difficulty)
-                uiState = uiState.copy(puzzle = puzzle.puzzle, isLoading = false)
+                // Inicializar las celdas de usuario, vacías donde es 0 en el puzzle
+                val userInput = puzzle.puzzle.map { row ->
+                    row.map { if (it == 0) "" else it.toString() }.toMutableList()
+                }
+                uiState = uiState.copy(
+                    puzzle = puzzle.puzzle,
+                    userInput = userInput,
+                    solution = puzzle.solution,
+                    isLoading = false
+                )
             } catch (e: Exception) {
                 uiState = uiState.copy(error = "Error al cargar puzzle", isLoading = false)
             }
+        }
+    }
+
+    // Función para actualizar el valor de una celda en el tablero
+    fun updateCell(row: Int, col: Int, value: String) {
+        uiState.userInput?.let { input ->
+            input[row][col] = value
+            uiState = uiState.copy(userInput = input)
+        }
+    }
+
+    // Función para verificar la solución del puzzle
+    fun checkSolution() {
+        val correct = uiState.solution
+        val input = uiState.userInput
+
+        if (correct != null && input != null) {
+            val isCorrect = correct.indices.all { row ->
+                correct[row].indices.all { col ->
+                    input[row][col].toIntOrNull() == correct[row][col]
+                }
+            }
+            uiState = uiState.copy(isCorrect = isCorrect)
         }
     }
 }
