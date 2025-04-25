@@ -13,4 +13,3 @@ data class SudokuPuzzle(
         }.flatten().toSet()
     }
 }
-

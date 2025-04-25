@@ -23,15 +23,20 @@ class SudokuViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             try {
                 val puzzle = generateSudokuUseCase(size, difficulty)
-                _uiState.update { it.copy(
-                    isLoading = false,
-                    puzzle = puzzle
-                ) }
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        puzzle = puzzle,
+                        cellErrors = emptySet()
+                    )
+                }
             } catch (e: Exception) {
-                _uiState.update { it.copy(
-                    isLoading = false,
-                    error = e.message
-                ) }
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = e.message
+                    )
+                }
             }
         }
     }
@@ -51,6 +56,42 @@ class SudokuViewModel @Inject constructor(
                     currentState
                 }
             } ?: currentState
+        }
+    }
+    fun checkSolution() {
+        _uiState.update { currentState ->
+            currentState.puzzle?.let { puzzle ->
+                val errors = mutableSetOf<Pair<Int, Int>>()
+                var allCorrect = true
+                var allFilled = true
+
+                puzzle.puzzle.forEachIndexed { row, rowCells ->
+                    rowCells.forEachIndexed { col, value ->
+                        if (value == 0) {
+                            allFilled = false
+                        } else if (value != puzzle.solution[row][col]) {
+                            errors.add(Pair(row, col))
+                            allCorrect = false
+                        }
+                    }
+                }
+
+                currentState.copy(
+                    cellErrors = errors,
+                    isCorrect = if (allFilled) allCorrect else null,
+                    showSolutionCheck = true
+                )
+            } ?: currentState
+        }
+    }
+
+    fun resetVerification() {
+        _uiState.update {
+            it.copy(
+                cellErrors = emptySet(),
+                isCorrect = null,
+                showSolutionCheck = false
+            )
         }
     }
 }

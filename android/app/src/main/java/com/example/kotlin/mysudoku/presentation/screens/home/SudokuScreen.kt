@@ -1,6 +1,7 @@
 package com.example.kotlin.mysudoku.presentation.screens.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -81,6 +82,29 @@ fun SudokuScreen(viewModel: SudokuViewModel = hiltViewModel()) {
             Text("Generar Sudoku")
         }
 
+        Button(
+            onClick = { viewModel.checkSolution() },
+            enabled = state.puzzle != null
+        ) {
+            Text("Verificar Solución")
+        }
+
+        // Mensaje de resultado
+        if (state.showSolutionCheck) {
+            Text(
+                text = when (state.isCorrect) {
+                    true -> "¡Correcto!"
+                    false -> "Incorrecto"
+                    else -> "Verifica tu solución"
+                },
+                color = when (state.isCorrect) {
+                    true -> Color.Green
+                    false -> Color.Red
+                    else -> Color.Black
+                }
+            )
+        }
+
         // Tablero
         when {
             state.isLoading -> CircularProgressIndicator()
@@ -88,6 +112,7 @@ fun SudokuScreen(viewModel: SudokuViewModel = hiltViewModel()) {
             state.puzzle != null -> {
                 SudokuBoard(
                     puzzle = state.puzzle!!,
+                    cellErrors = state.cellErrors,  // Añade este parámetro
                     onCellValueChanged = { row, col, value ->
                         viewModel.onCellValueChanged(row, col, value)
                     }
@@ -100,6 +125,7 @@ fun SudokuScreen(viewModel: SudokuViewModel = hiltViewModel()) {
 @Composable
 fun SudokuBoard(
     puzzle: SudokuPuzzle,
+    cellErrors: Set<Pair<Int, Int>>,
     onCellValueChanged: (Int, Int, Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -110,6 +136,7 @@ fun SudokuBoard(
                     SudokuCell(
                         value = cell,
                         isEditable = puzzle.editableCells.contains(Pair(rowIndex, colIndex)),
+                        isError = cellErrors.contains(Pair(rowIndex, colIndex)),
                         onValueChange = { newValue ->
                             onCellValueChanged(rowIndex, colIndex, newValue)
                         },
@@ -127,31 +154,36 @@ fun SudokuBoard(
 fun SudokuCell(
     value: Int,
     isEditable: Boolean,
+    isError: Boolean,
     onValueChange: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var currentValue by remember { mutableStateOf(value) }
     var isEditing by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
             .aspectRatio(1f)
-            .background(if (isEditable) Color.White else Color.LightGray)
+            .background(
+                when {
+                    isError -> Color(0xFFFFCDD2).copy(alpha = 0.7f)  // Rojo claro semitransparente
+                    !isEditable -> Color.LightGray.copy(alpha = 0.3f)
+                    else -> Color.Transparent
+                }
+            )
+            .border(1.dp, Color.Gray)
             .clickable(enabled = isEditable) { isEditing = true },
         contentAlignment = Alignment.Center
     ) {
         if (isEditing) {
-            var input by remember { mutableStateOf("") }
             TextField(
-                value = input,
+                value = if (value == 0) "" else value.toString(),
                 onValueChange = { newValue ->
-                    if (newValue.isEmpty() || newValue.toIntOrNull() in 1..9) {
-                        input = newValue
-                        if (newValue.length == 1) {
-                            currentValue = newValue.toInt()
-                            onValueChange(currentValue)
-                            isEditing = false
-                        }
+                    if (newValue.isEmpty()) {
+                        onValueChange(0)
+                        isEditing = false
+                    } else if (newValue.toIntOrNull() in 1..9) {
+                        onValueChange(newValue.toInt())
+                        isEditing = false
                     }
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -161,7 +193,11 @@ fun SudokuCell(
         } else {
             Text(
                 text = if (value == 0) "" else "$value",
-                fontSize = 20.sp
+                color = when {
+                    !isEditable -> Color.Black
+                    isError -> Color.Red
+                    else -> Color.Blue
+                }
             )
         }
     }

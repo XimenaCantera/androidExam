@@ -6,5 +6,7 @@ data class SudokuUiState(
     val isLoading: Boolean = false,
     val puzzle: SudokuPuzzle? = null,
     val error: String? = null,
-    val isCorrect: Boolean? = null
+    val cellErrors: Set<Pair<Int, Int>> = emptySet(),
+    val isCorrect: Boolean? = null,       // Para saber si la solución es correcta
+    val showSolutionCheck: Boolean = false // Para controlar cuándo mostrar el resultado
 )
