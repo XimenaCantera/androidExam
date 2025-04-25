@@ -19,15 +19,19 @@ object AppModule {
     @Provides
     fun provideSudokuApi(): SudokuApi {
         return Retrofit.Builder()
-            .baseUrl("https://api.api-ninjas.com/v1/")
+            .baseUrl("https://api.api-ninjas.com/v1/")  // ¡La barra al final es crucial!
             .addConverterFactory(GsonConverterFactory.create())
             .client(
-                OkHttpClient.Builder().addInterceptor { chain ->
-                    val request = chain.request().newBuilder()
-                        .addHeader("X-Api-Key", "wLVPN1zV08lJYF7uXqgyPw==zVwp6TlVcAO1NLUf")
-                        .build()
-                    chain.proceed(request)
-                }.build()
+                OkHttpClient.Builder()
+                    .addInterceptor { chain ->
+                        chain.proceed(
+                            chain.request()
+                                .newBuilder()
+                                .addHeader("X-Api-Key", "le/hUmGlDw7zvAWr+q5lug==DnRHO1skbYML96hj")  // Reemplaza con tu key real
+                                .build()
+                        )
+                    }
+                    .build()
             )
             .build()
             .create(SudokuApi::class.java)
@@ -38,6 +42,7 @@ object AppModule {
         SudokuRepositoryIm(api)
 
     @Provides
-    fun provideGenerateSudokuUseCase(repository: SudokuRepository): GenerateSudokuUseCase =
-        GenerateSudokuUseCase(repository)
+    fun provideGenerateSudokuUseCase(repository: SudokuRepository): GenerateSudokuUseCase {
+        return GenerateSudokuUseCase(repository)
+    }
 }

@@ -1,65 +1,43 @@
 package com.example.kotlin.mysudoku.presentation.screens.home
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.kotlin.mysudoku.domain.repository.SudokuRepository
 import com.example.kotlin.mysudoku.domain.usecase.GenerateSudokuUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
 class SudokuViewModel @Inject constructor(
-    private val generateSudoku: GenerateSudokuUseCase
+    private val generateSudokuUseCase: GenerateSudokuUseCase
 ) : ViewModel() {
+    private val _uiState = MutableStateFlow(SudokuUiState())
+    val uiState: StateFlow<SudokuUiState> = _uiState.asStateFlow()
 
-    var uiState by mutableStateOf(SudokuUiState())
-        private set
-
-    // Función para cargar un nuevo puzzle
-    fun loadPuzzle(width: Int, height: Int, difficulty: String) {
+    fun loadPuzzle(difficulty: String) {
         viewModelScope.launch {
-            uiState = uiState.copy(isLoading = true, error = null, isCorrect = null)
+            _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                val puzzle = generateSudoku(width, height, difficulty)
-                // Inicializar las celdas de usuario, vacías donde es 0 en el puzzle
-                val userInput = puzzle.puzzle.map { row ->
-                    row.map { if (it == 0) "" else it.toString() }.toMutableList()
+                val puzzle = generateSudokuUseCase(difficulty) // <- Usa el UseCase
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        puzzle = puzzle
+                    )
                 }
-                uiState = uiState.copy(
-                    puzzle = puzzle.puzzle,
-                    userInput = userInput,
-                    solution = puzzle.solution,
-                    isLoading = false
-                )
             } catch (e: Exception) {
-                uiState = uiState.copy(error = "Error al cargar puzzle", isLoading = false)
-            }
-        }
-    }
-
-    // Función para actualizar el valor de una celda en el tablero
-    fun updateCell(row: Int, col: Int, value: String) {
-        uiState.userInput?.let { input ->
-            input[row][col] = value
-            uiState = uiState.copy(userInput = input)
-        }
-    }
-
-    // Función para verificar la solución del puzzle
-    fun checkSolution() {
-        val correct = uiState.solution
-        val input = uiState.userInput
-
-        if (correct != null && input != null) {
-            val isCorrect = correct.indices.all { row ->
-                correct[row].indices.all { col ->
-                    input[row][col].toIntOrNull() == correct[row][col]
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = "Error: ${e.message}"
+                    )
                 }
             }
-            uiState = uiState.copy(isCorrect = isCorrect)
         }
     }
 }

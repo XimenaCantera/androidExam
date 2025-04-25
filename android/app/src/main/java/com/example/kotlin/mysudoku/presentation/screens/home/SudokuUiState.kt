@@ -1,11 +1,10 @@
 package com.example.kotlin.mysudoku.presentation.screens.home
 
+import com.example.kotlin.mysudoku.domain.model.SudokuPuzzle
+
 data class SudokuUiState(
     val isLoading: Boolean = false,
-    val puzzle: List<List<Int>>? = null,
-    val userInput: List<MutableList<String>>? = null,  // Editable
-    val solution: List<List<Int>>? = null,
+    val puzzle: SudokuPuzzle? = null,
     val error: String? = null,
-    val isCorrect: Boolean? = null                     // Resultado de verificación
+    val isCorrect: Boolean? = null
 )
-
