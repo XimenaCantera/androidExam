@@ -105,6 +105,25 @@ fun SudokuScreen(viewModel: SudokuViewModel = hiltViewModel()) {
             )
         }
 
+        // Fila de botones de control
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(
+                onClick = { viewModel.resetCurrentPuzzle() },
+                enabled = state.puzzle != null
+            ) {
+                Text("Reiniciar Puzzle")
+            }
+
+            Button(
+                onClick = {
+                    viewModel.loadNewPuzzle(selectedSize, selectedDifficulty)
+                },
+                enabled = state.puzzle != null
+            ) {
+                Text("Nuevo Puzzle")
+            }
+        }
+
         // Tablero
         when {
             state.isLoading -> CircularProgressIndicator()
@@ -112,7 +131,7 @@ fun SudokuScreen(viewModel: SudokuViewModel = hiltViewModel()) {
             state.puzzle != null -> {
                 SudokuBoard(
                     puzzle = state.puzzle!!,
-                    cellErrors = state.cellErrors,  // Añade este parámetro
+                    cellErrors = state.cellErrors,
                     onCellValueChanged = { row, col, value ->
                         viewModel.onCellValueChanged(row, col, value)
                     }
@@ -165,7 +184,7 @@ fun SudokuCell(
             .aspectRatio(1f)
             .background(
                 when {
-                    isError -> Color(0xFFFFCDD2).copy(alpha = 0.7f)  // Rojo claro semitransparente
+                    isError -> Color(0xFFFFCDD2).copy(alpha = 0.7f)
                     !isEditable -> Color.LightGray.copy(alpha = 0.3f)
                     else -> Color.Transparent
                 }

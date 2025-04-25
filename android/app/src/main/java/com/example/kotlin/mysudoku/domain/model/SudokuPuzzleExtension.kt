@@ -6,6 +6,7 @@ fun SudokuPuzzle.to4x4(): SudokuPuzzle {
     return SudokuPuzzle(
         puzzle = this.puzzle.take(4).map { it.take(4) },
         solution = this.solution.take(4).map { it.take(4) },
-        size = 4
+        size = 4,
+        difficulty = "medium"
     )
 }

@@ -7,6 +7,7 @@ fun SudokuDto.toDomain(): SudokuPuzzle {
     return SudokuPuzzle(
         puzzle = puzzle.map { row -> row.map { it ?: 0 } },
         solution = solution,
-        size = 9
+        size = 9,
+        difficulty = "medium"
     )
 }

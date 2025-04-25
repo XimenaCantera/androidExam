@@ -17,12 +17,14 @@ class SudokuViewModel @Inject constructor(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SudokuUiState())
     val uiState: StateFlow<SudokuUiState> = _uiState.asStateFlow()
+    private var initialPuzzleState: List<List<Int>> = emptyList()
 
     fun loadPuzzle(size: Int, difficulty: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
                 val puzzle = generateSudokuUseCase(size, difficulty)
+                initialPuzzleState = puzzle.puzzle.map { it.toList() }
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -31,15 +33,10 @@ class SudokuViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        error = e.message
-                    )
-                }
             }
         }
     }
+
 
     fun onCellValueChanged(row: Int, col: Int, value: Int) {
         _uiState.update { currentState ->
@@ -94,4 +91,37 @@ class SudokuViewModel @Inject constructor(
             )
         }
     }
+
+    // Guarda el puzzle actual
+    fun resetCurrentPuzzle() {
+        _uiState.update { currentState ->
+            currentState.puzzle?.let { puzzle ->
+                currentState.copy(
+                    puzzle = puzzle.copy(
+                        puzzle = initialPuzzleState.map { it.toMutableList() }
+                    ),
+                    cellErrors = emptySet()
+                )
+            } ?: currentState
+        }
+    }
+
+    // Nuevo puzzle
+    fun loadNewPuzzle(size: Int, difficulty: String) {
+        saveCurrentPuzzle()
+        loadPuzzle(size, difficulty)
+    }
+
+    // Guardar el puzzle actual
+    fun saveCurrentPuzzle() {
+        _uiState.update { currentState ->
+            currentState.puzzle?.let { puzzle ->
+                val key = "${puzzle.size}-${puzzle.difficulty}"
+                currentState.copy(
+                    savedPuzzles = currentState.savedPuzzles + (key to puzzle)
+                )
+            } ?: currentState
+        }
+    }
+
 }
