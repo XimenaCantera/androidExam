@@ -5,9 +5,8 @@ import com.example.kotlin.mysudoku.domain.model.SudokuPuzzle
 
 fun SudokuDto.toDomain(): SudokuPuzzle {
     return SudokuPuzzle(
-        puzzle = puzzle.map { row ->
-            row.map { cell -> cell ?: 0 }  // Convierte null → 0
-        },
-        solution = solution
+        puzzle = puzzle.map { row -> row.map { it ?: 0 } },
+        solution = solution,
+        size = 9
     )
 }

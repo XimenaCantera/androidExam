@@ -2,7 +2,6 @@ package com.example.kotlin.mysudoku.presentation.screens.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.kotlin.mysudoku.domain.repository.SudokuRepository
 import com.example.kotlin.mysudoku.domain.usecase.GenerateSudokuUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,24 +18,20 @@ class SudokuViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(SudokuUiState())
     val uiState: StateFlow<SudokuUiState> = _uiState.asStateFlow()
 
-    fun loadPuzzle(difficulty: String) {
+    fun loadPuzzle(size: Int, difficulty: String) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
+            _uiState.update { it.copy(isLoading = true) }
             try {
-                val puzzle = generateSudokuUseCase(difficulty) // <- Usa el UseCase
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        puzzle = puzzle
-                    )
-                }
+                val puzzle = generateSudokuUseCase(size, difficulty)
+                _uiState.update { it.copy(
+                    isLoading = false,
+                    puzzle = puzzle
+                ) }
             } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        error = "Error: ${e.message}"
-                    )
-                }
+                _uiState.update { it.copy(
+                    isLoading = false,
+                    error = "Error: ${e.message}"
+                ) }
             }
         }
     }

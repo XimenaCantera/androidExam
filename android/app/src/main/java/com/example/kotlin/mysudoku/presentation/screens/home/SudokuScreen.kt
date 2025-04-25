@@ -3,8 +3,10 @@ package com.example.kotlin.mysudoku.presentation.screens.home
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -20,70 +22,39 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
-fun SudokuScreen(
-    viewModel: SudokuViewModel = hiltViewModel()
-) {
+fun SudokuScreen(viewModel: SudokuViewModel = hiltViewModel()) {
     val state = viewModel.uiState.collectAsState()
 
-    // Cargar puzzle al iniciar (opcional)
-    LaunchedEffect(Unit) {
-        viewModel.loadPuzzle("easy") // Dificultad por defecto
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        // Botones de dificultad
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(bottom = 16.dp)
-        ) {
-            Button(onClick = { viewModel.loadPuzzle("easy") }) {
-                Text("Fácil")
+    Column {
+        // Selector de tamaño
+        Row {
+            Button(onClick = { viewModel.loadPuzzle(4, "easy") }) {
+                Text("4x4")
             }
-            Button(onClick = { viewModel.loadPuzzle("medium") }) {
-                Text("Medio")
-            }
-            Button(onClick = { viewModel.loadPuzzle("hard") }) {
-                Text("Difícil")
+            Spacer(modifier = Modifier.width(8.dp))
+            Button(onClick = { viewModel.loadPuzzle(9, "easy") }) {
+                Text("9x9")
             }
         }
 
-        when {
-            state.value.isLoading -> {
-                CircularProgressIndicator()
-            }
-
-            state.value.error != null -> {
-                Text(
-                    text = "Error: ${state.value.error}",
-                    color = Color.Red,
-                    fontSize = 18.sp
-                )
-            }
-
-            state.value.puzzle != null -> {
-                // Mostrar el tablero de Sudoku
-                SudokuBoard(
-                    puzzle = state.value.puzzle!!.puzzle,
-                    modifier = Modifier.padding(8.dp)
-                )
-
-                // Mensaje si está completado
-                if (state.value.isCorrect == true) {
-                    Text(
-                        text = "¡Correcto!",
-                        color = Color.Green,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        modifier = Modifier.padding(top = 16.dp)
-                    )
+        // Selector de dificultad
+        Row {
+            listOf("easy", "medium", "hard").forEach { difficulty ->
+                Button(
+                    onClick = {
+                        val size = state.value.puzzle?.puzzle?.size ?: 9
+                        viewModel.loadPuzzle(size, difficulty)
+                    },
+                    modifier = Modifier.padding(4.dp)
+                ) {
+                    Text(difficulty.capitalize())
                 }
             }
+        }
+
+        // Mostrar el tablero
+        state.value.puzzle?.let { puzzle ->
+            SudokuBoard(puzzle = puzzle.puzzle)
         }
     }
 }
