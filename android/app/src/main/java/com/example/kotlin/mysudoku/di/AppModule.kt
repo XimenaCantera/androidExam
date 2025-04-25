@@ -19,7 +19,7 @@ object AppModule {
     @Provides
     fun provideSudokuApi(): SudokuApi {
         return Retrofit.Builder()
-            .baseUrl("https://api.api-ninjas.com/v1/")  // ¡La barra al final es crucial!
+            .baseUrl("https://api.api-ninjas.com/v1/")
             .addConverterFactory(GsonConverterFactory.create())
             .client(
                 OkHttpClient.Builder()
@@ -27,7 +27,7 @@ object AppModule {
                         chain.proceed(
                             chain.request()
                                 .newBuilder()
-                                .addHeader("X-Api-Key", "le/hUmGlDw7zvAWr+q5lug==DnRHO1skbYML96hj")  // Reemplaza con tu key real
+                                .addHeader("X-Api-Key", "le/hUmGlDw7zvAWr+q5lug==DnRHO1skbYML96hj")
                                 .build()
                         )
                     }

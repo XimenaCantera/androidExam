@@ -3,13 +3,14 @@ package com.example.kotlin.mysudoku.domain.model
 data class SudokuPuzzle(
     val puzzle: List<List<Int>>,
     val solution: List<List<Int>>,
-    val editableCells: List<Pair<Int, Int>> = emptyList() // Celdas modificables (ej: donde puzzle[i][j] == 0)
+    val difficulty: String,
+    val size: Int
 ) {
-    fun isComplete(): Boolean {
-        return puzzle.flatten().none { it == 0 }
-    }
-
-    fun isCorrect(): Boolean {
-        return puzzle == solution
+    val editableCells: Set<Pair<Int, Int>> by lazy {
+        puzzle.mapIndexedNotNull { i, row ->
+            row.mapIndexedNotNull { j, cell ->
+                if (cell == 0) Pair(i, j) else null
+            }
+        }.flatten().toSet()
     }
 }
