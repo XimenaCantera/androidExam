@@ -30,9 +30,27 @@ class SudokuViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.update { it.copy(
                     isLoading = false,
-                    error = "Error: ${e.message}"
+                    error = e.message
                 ) }
             }
+        }
+    }
+
+    fun onCellValueChanged(row: Int, col: Int, value: Int) {
+        _uiState.update { currentState ->
+            currentState.puzzle?.let { puzzle ->
+                if (puzzle.editableCells.contains(Pair(row, col))) {
+                    val newPuzzle = puzzle.puzzle.toMutableList().map { it.toMutableList() }
+                    newPuzzle[row][col] = value
+                    currentState.copy(
+                        puzzle = puzzle.copy(
+                            puzzle = newPuzzle.map { it.toList() }
+                        )
+                    )
+                } else {
+                    currentState
+                }
+            } ?: currentState
         }
     }
 }
